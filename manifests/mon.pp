@@ -58,6 +58,7 @@ define ceph::mon (
   $authentication_type = 'cephx',
   $key = undef,
   $keyring  = undef,
+  $init = undef,
   ) {
 
     # a puppet name translates into a ceph id, the meaning is different
@@ -81,12 +82,21 @@ define ceph::mon (
         status   => "status ceph-mon id=${id}",
       }
     } elsif ($::operatingsystem == 'Debian') or ($::osfamily == 'RedHat') {
-      $init = 'sysvinit'
-      Service {
-        name     => "ceph-mon-${id}",
-        start    => "service ceph start mon.${id}",
-        stop     => "service ceph stop mon.${id}",
-        status   => "service ceph status mon.${id}",
+      if $init == 'systemd' {
+        Service {
+          name     => "ceph-mon-${id}",
+          start    => "systemctl start ceph-mon@${id}",
+          stop     => "systemctl stop ceph-mon@${id}",
+          status   => "systemctl status ceph-mon@${id}",
+        }
+      } else {
+        $init = 'sysvinit'
+        Service {
+          name     => "ceph-mon-${id}",
+          start    => "service ceph start mon.${id}",
+          stop     => "service ceph stop mon.${id}",
+          status   => "service ceph status mon.${id}",
+        }
       }
     } else {
       fail("operatingsystem = ${::operatingsystem} is not supported")
