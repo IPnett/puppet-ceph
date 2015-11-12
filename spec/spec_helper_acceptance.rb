@@ -27,8 +27,8 @@ RSpec.configure do |c|
     # clean out any module cruft
     shell('rm -fr /etc/puppet/modules/*')
     on host, "mkdir -p #{host['distmoduledir']}"
-    # we will provide our own epel with some excludes later
-    shell('test -f /etc/debian_version || yum-config-manager --disable epel')
+    # we will provide our own epel, but excluding the ceph packages later
+    shell('rm -f /etc/yum.repos.d/epel.repo')
   end
 
   c.formatter = :documentation
@@ -45,6 +45,7 @@ RSpec.configure do |c|
       on host, puppet('module install puppetlabs/apt --version ">=1.4.0 <2.0.0"'), { :acceptable_exit_codes => [0,1] }
       on host, puppet('module install puppetlabs/concat --version ">=1.2.1 <2.0.0"'), { :acceptable_exit_codes => [0,1] }
       on host, puppet('module install puppetlabs/apache --version ">=1.4.1 <2.0.0"'), { :acceptable_exit_codes => [0,1] }
+      on host, puppet('module install stackforge/keystone --version ">=5.1.0 <6.0.0"'), { :acceptable_exit_codes => [0,1] }
       puppet_module_install(:source => proj_root, :module_name => 'ceph')
       # Flush the firewall
       flushfw = <<-EOS

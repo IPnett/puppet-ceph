@@ -55,18 +55,17 @@ describe 'ceph::rgw::apache' do
         'port'              => 80,
         'docroot'           => '/var/www',
         'rewrite_rule'      => '^/([a-zA-Z0-9-_.]*)([/]?.*) /s3gw.fcgi?page=$1&params=$2&%{QUERY_STRING} [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]',
-        'access_log_syslog' => true,
-        'error_log_syslog'  => true,
-        'custom_fragment'   => "
-  FastCgiExternalServer /var/www/s3gw.fcgi -socket /tmp/radosgw.sock
-  AllowEncodedSlashes On
-  ServerSignature Off",
+        'access_log'        => true,
+        'error_log'         => true,
+        'fastcgi_server'    => '/var/www/s3gw.fcgi',
+        'fastcgi_socket'    => '/tmp/radosgw.sock',
+        'fastcgi_dir'       => '/var/www',
       })}
 
       it { is_expected.to contain_class('apache') }
       it { is_expected.to contain_class('apache::mod::alias') }
       it { is_expected.to contain_class('apache::mod::auth_basic') }
-      it { is_expected.to contain_apache__mod('fastcgi').with ( { 'package' => 'libapache2-mod-fastcgi' } ) }
+      it { is_expected.to contain_class('apache::mod::fastcgi') }
       it { is_expected.to contain_class('apache::mod::mime') }
       it { is_expected.to contain_class('apache::mod::rewrite') }
 
@@ -104,18 +103,17 @@ exec /usr/bin/radosgw -c /etc/ceph/ceph.conf -n radosgw.gateway",
         'port'              => 1111,
         'docroot'           => '/var/www',
         'rewrite_rule'      => '^/([a-zA-Z0-9-_.]*)([/]?.*) /s3gw.fcgi?page=$1&params=$2&%{QUERY_STRING} [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]',
-        'access_log_syslog' => false,
-        'error_log_syslog'  => false,
-        'custom_fragment'   => "
-  FastCgiExternalServer /some/fcgi/filepath -socket /some/location/radosgw.sock
-  AllowEncodedSlashes On
-  ServerSignature Off",
+        'access_log'        => false,
+        'error_log'         => false,
+        'fastcgi_server'    => '/some/fcgi/filepath',
+        'fastcgi_socket'    => '/some/location/radosgw.sock',
+        'fastcgi_dir'       => '/var/www',
       } ) }
 
       it { is_expected.to contain_class('apache') }
       it { is_expected.to contain_class('apache::mod::alias') }
       it { is_expected.to contain_class('apache::mod::auth_basic') }
-      it { is_expected.to contain_apache__mod('fastcgi').with ( { 'package' => 'libapache2-mod-fastcgi' } ) }
+      it { is_expected.to contain_class('apache::mod::fastcgi') }
       it { is_expected.to contain_class('apache::mod::mime') }
       it { is_expected.to contain_class('apache::mod::rewrite') }
 
@@ -150,18 +148,17 @@ exec /usr/bin/radosgw -c /etc/ceph/ceph.conf -n radosgw.gateway",
         'port'              => 80,
         'docroot'           => '/var/www',
         'rewrite_rule'      => '^/([a-zA-Z0-9-_.]*)([/]?.*) /s3gw.fcgi?page=$1&params=$2&%{QUERY_STRING} [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]',
-        'access_log_syslog' => true,
-        'error_log_syslog'  => true,
-        'custom_fragment'   => "
-  FastCgiExternalServer /var/www/s3gw.fcgi -socket /tmp/radosgw.sock
-  AllowEncodedSlashes On
-  ServerSignature Off",
+        'access_log'        => true,
+        'error_log'         => true,
+        'fastcgi_server'    => '/var/www/s3gw.fcgi',
+        'fastcgi_socket'    => '/tmp/radosgw.sock',
+        'fastcgi_dir'       => '/var/www',
       })}
 
       it { is_expected.to contain_class('apache') }
       it { is_expected.to contain_class('apache::mod::alias') }
       it { is_expected.to contain_class('apache::mod::auth_basic') }
-      it { is_expected.to contain_apache__mod('fastcgi').with ( { 'package' => 'mod_fastcgi' } ) }
+      it { is_expected.to contain_class('apache::mod::fastcgi') }
       it { is_expected.to contain_class('apache::mod::mime') }
       it { is_expected.to contain_class('apache::mod::rewrite') }
 
@@ -199,18 +196,17 @@ exec /usr/bin/radosgw -c /etc/ceph/ceph.conf -n radosgw.gateway",
         'port'              => 1111,
         'docroot'           => '/var/www',
         'rewrite_rule'      => '^/([a-zA-Z0-9-_.]*)([/]?.*) /s3gw.fcgi?page=$1&params=$2&%{QUERY_STRING} [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]',
-        'access_log_syslog' => false,
-        'error_log_syslog'  => false,
-        'custom_fragment'   => "
-  FastCgiExternalServer /some/fcgi/filepath -socket /some/location/radosgw.sock
-  AllowEncodedSlashes On
-  ServerSignature Off",
+        'access_log'        => false,
+        'error_log'         => false,
+        'fastcgi_server'    => '/some/fcgi/filepath',
+        'fastcgi_socket'    => '/some/location/radosgw.sock',
+        'fastcgi_dir'       => '/var/www',
       } ) }
 
       it { is_expected.to contain_class('apache') }
       it { is_expected.to contain_class('apache::mod::alias') }
       it { is_expected.to contain_class('apache::mod::auth_basic') }
-      it { is_expected.to contain_apache__mod('fastcgi').with ( { 'package' => 'mod_fastcgi' } ) }
+      it { is_expected.to contain_class('apache::mod::fastcgi') }
       it { is_expected.to contain_class('apache::mod::mime') }
       it { is_expected.to contain_class('apache::mod::rewrite') }
 

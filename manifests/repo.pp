@@ -54,8 +54,8 @@ class ceph::repo (
 
       apt::key { 'ceph':
         ensure     => $ensure,
-        key        => '17ED316D',
-        key_source => 'http://git.ceph.com/?p=ceph.git;a=blob_plain;f=keys/release.asc',
+        key        => '08B73419AC32B4E966C1A330E84AC2C0460F3994',
+        key_source => 'https://git.ceph.com/release.asc',
       }
 
       apt::source { 'ceph':
@@ -81,7 +81,7 @@ class ceph::repo (
 
         apt::key { 'ceph-gitbuilder':
           ensure     => $ensure,
-          key        => '6EAEAE2203C3951A',
+          key        => 'FCC5CB2ED8E6F6FB79D5B3316EAEAE2203C3951A',
           key_server => 'keyserver.ubuntu.com',
         }
 
@@ -122,8 +122,8 @@ class ceph::repo (
         descr      => "External EPEL ${el}",
         name       => "ext-epel-${el}",
         baseurl    => absent,
-        gpgcheck   => '0',
-        gpgkey     => absent,
+        gpgcheck   => '1',
+        gpgkey     => "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-${el}",
         mirrorlist => "http://mirrors.fedoraproject.org/metalink?repo=epel-${el}&arch=\$basearch",
         priority   => '20', # prefer ceph repos over EPEL
         tag        => 'ceph',
@@ -137,7 +137,7 @@ class ceph::repo (
         name       => "ext-ceph-${release}",
         baseurl    => "http://ceph.com/rpm-${release}/el${el}/\$basearch",
         gpgcheck   => '1',
-        gpgkey     => 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc',
+        gpgkey     => 'https://git.ceph.com/release.asc',
         mirrorlist => absent,
         priority   => '10', # prefer ceph repos over EPEL
         tag        => 'ceph',
@@ -150,7 +150,7 @@ class ceph::repo (
         name       => "ext-ceph-${release}-noarch",
         baseurl    => "http://ceph.com/rpm-${release}/el${el}/noarch",
         gpgcheck   => '1',
-        gpgkey     => 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc',
+        gpgkey     => 'https://git.ceph.com/release.asc',
         mirrorlist => absent,
         priority   => '10', # prefer ceph repos over EPEL
         tag        => 'ceph',
@@ -164,7 +164,7 @@ class ceph::repo (
           name       => 'ext-ceph-extras',
           baseurl    => 'http://ceph.com/packages/ceph-extras/rpm/rhel6/$basearch',
           gpgcheck   => '1',
-          gpgkey     => 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc',
+          gpgkey     => 'https://git.ceph.com/release.asc',
           mirrorlist => absent,
           priority   => '10', # prefer ceph repos over EPEL
           tag        => 'ceph',
@@ -180,7 +180,7 @@ class ceph::repo (
           name       => 'ext-ceph-fastcgi',
           baseurl    => "http://gitbuilder.ceph.com/mod_fastcgi-rpm-rhel${el}-x86_64-basic/ref/master",
           gpgcheck   => '1',
-          gpgkey     => 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/autobuild.asc',
+          gpgkey     => 'https://git.ceph.com/autobuild.asc',
           mirrorlist => absent,
           priority   => '20', # prefer ceph repos over EPEL
           tag        => 'ceph',
