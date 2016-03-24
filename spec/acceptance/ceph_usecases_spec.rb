@@ -28,7 +28,7 @@ describe 'ceph usecases' do
       pp = <<-EOS
         class { 'ceph::repo': }
         class { 'ceph':
-          fsid                       => generate('/usr/bin/uuidgen'),
+          fsid                       => '82274746-9a2c-426b-8c51-107fb0d890c6',
           mon_host                   => $::ipaddress,
           authentication_type        => 'none',
           osd_pool_default_size      => '1',
@@ -44,9 +44,8 @@ describe 'ceph usecases' do
         ceph::osd { '/srv/data': }
       EOS
 
-      # due to the generate() the above is not idempotent
-      # so we don't run twice as usual
       apply_manifest(pp, :catch_failures => true)
+      apply_manifest(pp, :catch_changes => true)
 
       shell 'sleep 10' # we need to wait a bit until the OSD is up
 
@@ -55,14 +54,17 @@ describe 'ceph usecases' do
         expect(r.stderr).to be_empty
       end
 
-      shell 'ceph osd tree', { :acceptable_exit_codes => [0] } do |r|
-        expect(r.stdout).to match(/osd.0/)
+      shell 'ceph osd tree | grep osd.0', { :acceptable_exit_codes => [0] } do |r|
+        expect(r.stdout).to match(/up/)
         expect(r.stderr).to be_empty
       end
     end
 
     it 'should uninstall one osd' do
-      shell 'ceph osd tree | grep DNE', { :acceptable_exit_codes => [1] }
+      shell 'ceph osd tree | grep osd.0', { :acceptable_exit_codes => [0] } do |r|
+        expect(r.stdout).to match(/up/)
+        expect(r.stderr).to be_empty
+      end
 
       pp = <<-EOS
         ceph::osd { '/srv/data':
@@ -75,7 +77,7 @@ describe 'ceph usecases' do
 
       shell 'sleep 10' # we need to wait a bit until the OSD is down
 
-      shell 'ceph osd tree | grep DNE', { :acceptable_exit_codes => [0] }
+      shell 'ceph osd tree | grep osd.0', { :acceptable_exit_codes => [1] }
     end
 
     it 'should uninstall one monitor' do
@@ -113,6 +115,16 @@ describe 'ceph usecases' do
         class { 'ceph::repo':
           ensure  => absent,
         }
+        file { [
+           '/var/lib/ceph',
+           '/srv/data',
+          ]:
+          ensure => absent,
+          recurse => true,
+          purge => true,
+          force => true,
+        }
+
       EOS
 
       apply_manifest(pp, :catch_failures => true)
