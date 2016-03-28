@@ -15,7 +15,7 @@
 # Author: Andrew Woodward <xarses>
 
 # This is aparently one of the few ways to do this load
-# see https://github.com/stackforge/puppet-nova/blob/master/spec/unit/provider/nova_config/ini_setting_spec.rb
+# see https://github.com/openstack/puppet-nova/blob/master/spec/unit/provider/nova_config/ini_setting_spec.rb
 $LOAD_PATH.push(
   File.join(
     File.dirname(__FILE__),
@@ -42,7 +42,7 @@ describe provider_class do
       :path    => tmpfile,
   } }
 
-  def validate(expected, tmpfile = tmpfile)
+  def validate(expected)
     expect(File.read(tmpfile)).to eq(expected)
   end
 

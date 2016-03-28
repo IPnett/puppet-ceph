@@ -51,6 +51,9 @@
 # [*keyring*] Path of the [mon.] keyring file
 #   Optional. $key and $keyring are mutually exclusive.
 #
+# [*exec_timeout*] The default exec resource timeout, in seconds
+#   Optional. Defaults to $::ceph::params::exec_timeout
+#
 define ceph::mon (
   $ensure = present,
   $public_addr = undef,
@@ -59,6 +62,7 @@ define ceph::mon (
   $key = undef,
   $keyring  = undef,
   $init = undef,
+  $exec_timeout = $::ceph::params::exec_timeout,
   ) {
 
     # a puppet name translates into a ceph id, the meaning is different
@@ -118,12 +122,26 @@ define ceph::mon (
         if $key {
           $keyring_path = "/tmp/ceph-mon-keyring-${id}"
 
-          file { $keyring_path:
-            mode    => '0444',
-            content => "[mon.]\n\tkey = ${key}\n\tcaps mon = \"allow *\"\n",
+          Ceph_config<||> ->
+          exec { "create-keyring-${id}":
+            command => "/bin/true # comment to satisfy puppet syntax requirements
+set -ex
+cat > ${keyring_path} << EOF
+[mon.]
+    key = ${key}
+    caps mon = \"allow *\"
+EOF
+
+chmod 0444 ${keyring_path}
+",
+            unless  => "/bin/true # comment to satisfy puppet syntax requirements
+set -ex
+mon_data=\$(ceph-mon ${cluster_option} --id ${id} --show-config-value mon_data) || exit 1 # if ceph-mon fails then the mon is probably not configured yet
+test -e \$mon_data/done
+",
           }
 
-          File[$keyring_path] -> Exec[$ceph_mkfs]
+          Exec["create-keyring-${id}"] -> Exec[$ceph_mkfs]
 
         } else {
           $keyring_path = $keyring
@@ -134,15 +152,20 @@ define ceph::mon (
       }
 
       if $public_addr {
-        $public_addr_option = "--public_addr ${public_addr}"
+        ceph_config {
+          "mon.${id}/public_addr": value => $public_addr;
+        }
       }
 
-      Ceph_Config<||> ->
+      Ceph_config<||> ->
       # prevent automatic creation of the client.admin key by ceph-create-keys
       exec { "ceph-mon-${cluster_name}.client.admin.keyring-${id}":
         command => "/bin/true # comment to satisfy puppet syntax requirements
 set -ex
 touch /etc/ceph/${cluster_name}.client.admin.keyring",
+        unless  => "/bin/true # comment to satisfy puppet syntax requirements
+set -ex
+test -e /etc/ceph/${cluster_name}.client.admin.keyring",
       }
       ->
       exec { $ceph_mkfs:
@@ -152,7 +175,6 @@ mon_data=\$(ceph-mon ${cluster_option} --id ${id} --show-config-value mon_data)
 if [ ! -d \$mon_data ] ; then
   mkdir -p \$mon_data
   if ceph-mon ${cluster_option} \
-        ${public_addr_option} \
         --mkfs \
         --id ${id} \
         --keyring ${keyring_path} ; then
@@ -162,13 +184,18 @@ if [ ! -d \$mon_data ] ; then
   fi
 fi
 ",
+        unless    => "/bin/true # comment to satisfy puppet syntax requirements
+set -ex
+mon_data=\$(ceph-mon ${cluster_option} --id ${id} --show-config-value mon_data)
+test -d  \$mon_data
+",
         logoutput => true,
+        timeout   => $exec_timeout,
       }
       ->
       service { $mon_service:
         ensure => running,
       }
-
 
       if $authentication_type == 'cephx' {
         if $key {
@@ -176,6 +203,10 @@ fi
 
           exec { "rm-keyring-${id}":
             command => "/bin/rm ${keyring_path}",
+            unless  => "/bin/true # comment to satisfy puppet syntax requirements
+set -ex
+test ! -e ${keyring_path}
+",
           }
         }
       }
@@ -198,6 +229,10 @@ mon_data=\$(ceph-mon ${cluster_option} --id ${id} --show-config-value mon_data)
 test ! -d \$mon_data
 ",
         logoutput => true,
+        timeout   => $exec_timeout,
+      } ->
+      ceph_config {
+        "mon.${id}/public_addr": ensure => absent;
       } -> Package<| tag == 'ceph' |>
     }
   }
